@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+ 
+  <info name="GrainitaModule"
+        title="GRAiNITA demonstrator module, 17 x 17 x 40 cm3"
+        author="ALFA PoC"
+        url="none"
+        status="development"
+        version="0.1">
+    <comment>
+      Standalone GRAiNITA module for a proof-of-concept full simulation.
+      Dimensions follow the demonstrator on slide 94 of the ALFA deck.
+    </comment>
+  </info>
+ 
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
+    <gdmlFile ref="grainita_materials.xml"/>
+  </includes>
+ 
+  <define>
+    <!-- module envelope -->
+    <constant name="Grainita_size_x"     value="17.0*cm"/>
+    <constant name="Grainita_size_y"     value="17.0*cm"/>
+    <constant name="Grainita_size_z"     value="40.0*cm"/>  <!-- = 25 X0 -->
+ 
+    <!-- WLS fibre grid (slide 90: 7 mm pitch) -->
+    <constant name="Grainita_fibre_pitch"  value="7.0*mm"/>
+    <constant name="Grainita_fibre_radius" value="0.5*mm"/>
+ 
+    <!--
+      Longitudinal segmentation. Slide 96 lists this as an open design
+      question ("at least two sections"). Change this constant to scan:
+        40*cm -> 1 section
+        20*cm -> 2 sections
+        10*cm -> 4 sections
+    -->
+    <constant name="Grainita_seg_z"      value="20.0*cm"/>
+ 
+    <constant name="world_side"          value="2.0*m"/>
+    <constant name="world_x"             value="world_side"/>
+    <constant name="world_y"             value="world_side"/>
+    <constant name="world_z"             value="world_side"/>
+ 
+    <!--
+      Required by the DDSim UserParticleHandler. They bound the region inside
+      which MC particles are kept for the truth link to sim hits. Every k4geo
+      detector model defines them; without them ddsim aborts with
+      "Attribute of tracker region missing in detector model".
+ 
+      For a standalone test module there is no tracker, so just make the
+      region large enough to contain everything: half the world.
+    -->
+    <constant name="tracker_region_rmax" value="world_side/2"/>
+    <constant name="tracker_region_zmax" value="world_side/2"/>
+  </define>
+ 
+  <display>
+    <vis name="GrainitaVis" r="0.20" g="0.55" b="0.75" alpha="0.35"
+         showDaughters="true" visible="true"/>
+    <vis name="FibreVis"    r="0.95" g="0.85" b="0.20" alpha="1.0"
+         showDaughters="false" visible="true"/>
+  </display>
+ 
+  <detectors>
+    <detector id="1" name="GrainitaEcal" type="GrainitaModule"
+              material="Grainita"
+              readout="GrainitaEcalHits"
+              vis="GrainitaVis">
+      <dimensions x="Grainita_size_x" y="Grainita_size_y" z="Grainita_size_z"/>
+      <fibres pitch="Grainita_fibre_pitch"
+              radius="Grainita_fibre_radius"
+              material="WLSFibreCore"
+              vis="FibreVis"/>
+    </detector>
+  </detectors>
+ 
+  <readouts>
+    <readout name="GrainitaEcalHits">
+      <segmentation type="CartesianGridXYZ"
+                    grid_size_x="Grainita_fibre_pitch"
+                    grid_size_y="Grainita_fibre_pitch"
+                    grid_size_z="Grainita_seg_z"/>
+      <id>system:5,x:-16,y:-16,z:-16</id>
+    </readout>
+  </readouts>
+ 
+</lccdd>
+ 
+

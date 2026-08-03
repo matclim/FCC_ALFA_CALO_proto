@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+ 
+  <info name="EcalBarrelModular"
+        title="GRAiNITA ECAL barrel built from discrete modules"
+        author="ALFA PoC"
+        url="none"
+        status="development"
+        version="0.2">
+    <comment>
+      ECAL barrel only. HCAL, endcaps and mechanical structure come later.
+      Inner radius from ALFA deck slide 4 (ARC outer diameter 4.4 m);
+      the z half-length is assumed and flagged below.
+    </comment>
+  </info>
+ 
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
+    <gdmlFile ref="grainita_materials.xml"/>
+  </includes>
+ 
+  <define>
+    <constant name="Ecal_rmin"  value="220.0*cm"/>   <!-- ARC OD is 4.4 m     -->
+    <constant name="Ecal_depth" value="40.5*cm"/>    <!-- 25 X0 at 1.62 cm    -->
+    <constant name="Ecal_rmax"  value="Ecal_rmin + Ecal_depth"/>
+    <constant name="Ecal_dz"    value="250.0*cm"/>   <!-- ASSUMED, not from the deck -->
+ 
+    <!--
+      Module tiling. 81 phi modules give 17.07 cm width at the inner face,
+      which lands on the 17 x 17 cm demonstrator without being tuned to it.
+      30 rows in z give 16.67 cm modules. Total 2430.
+ 
+      All modules are geometrically identical, so the constructor builds one
+      logical volume and places it 2430 times.
+    -->
+    <constant name="Ecal_nphi"    value="81"/>
+    <constant name="Ecal_nz"      value="30"/>
+ 
+    <!-- Inter-module gap. Zero for now: raise it once there are real wall
+         thicknesses, and cracks appear without touching the constructor. -->
+    <constant name="Ecal_gap"     value="0.0*mm"/>
+ 
+    <!-- Longitudinal sections, slide 96. Set 1, 2 or 4 to scan. -->
+    <constant name="Ecal_nlayers" value="2"/>
+ 
+    <constant name="world_side" value="8.0*m"/>
+    <constant name="world_x"    value="world_side"/>
+    <constant name="world_y"    value="world_side"/>
+    <constant name="world_z"    value="world_side"/>
+ 
+    <constant name="tracker_region_rmax" value="Ecal_rmin"/>
+    <constant name="tracker_region_zmax" value="Ecal_dz"/>
+  </define>
+ 
+  <display>
+    <vis name="EcalVis" r="0.20" g="0.55" b="0.75" alpha="0.50"
+         showDaughters="true" visible="true"/>
+  </display>
+ 
+  <detectors>
+    <detector id="1" name="EcalBarrel" type="GrainitaBarrelModular"
+              material="GrainitaBarrelMix"
+              readout="EcalBarrelHits"
+              vis="EcalVis">
+      <dimensions rmin="Ecal_rmin" rmax="Ecal_rmax" dz="Ecal_dz"/>
+      <modules nphi="Ecal_nphi" nz="Ecal_nz" gap="Ecal_gap"/>
+      <layers number="Ecal_nlayers"/>
+    </detector>
+  </detectors>
+ 
+  <readouts>
+    <!--
+      Cells live in the MODULE's local frame, not global coordinates:
+        local x = azimuthal (the tapering direction)
+        local y = along the beam
+      7 mm to match the WLS fibre pitch.
+      Bit budget: 5 + 7 + 5 + 2 + 6 + 6 = 31, well inside 64.
+    -->
+    <readout name="EcalBarrelHits">
+      <segmentation type="CartesianGridXY" grid_size_x="7.0*mm" grid_size_y="7.0*mm"/>
+      <id>system:5,module:7,row:5,layer:2,x:-6,y:-6</id>
+    </readout>
+  </readouts>
+ 
+</lccdd>
+

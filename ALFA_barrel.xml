@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+ 
+  <info name="ALFA_barrel"
+        title="ALFA calorimeter barrels: GRAiNITA ECAL + DR tube HCAL"
+        author="ALFA PoC"
+        url="none"
+        status="development"
+        version="0.1">
+    <comment>
+      Combined view of both barrels in one geometry.
+ 
+      This file is SELF-CONTAINED and duplicates the constants from
+      EcalBarrelModular.xml and HcalBarrelTubes.xml. That duplication is
+      deliberate: DD4hep cannot include two compact files that each define
+      the world and re-include the element tables. The cost is that changes
+      to either subsystem must be mirrored here.
+ 
+      Treat the two single-subsystem files as authoritative for physics
+      runs, and this one as the combined picture.
+ 
+      DEFAULT IS A PARTIAL HCAL: 90 degrees of azimuth. A full 360 degree
+      tube barrel is tens of millions of volumes and takes hours to build.
+      A quadrant renders in reasonable time and is a better picture anyway,
+      because you can see into it.
+    </comment>
+  </info>
+ 
+  <!-- World first: DD4hep builds it while processing <includes>. -->
+  <define>
+    <constant name="world_side" value="14.0*m"/>
+    <constant name="world_x"    value="world_side"/>
+    <constant name="world_y"    value="world_side"/>
+    <constant name="world_z"    value="world_side"/>
+  </define>
+ 
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
+    <gdmlFile ref="grainita_materials.xml"/>
+    <gdmlFile ref="drtubes_materials.xml"/>
+    <gdmlFile ref="hcal_materials.xml"/>
+  </includes>
+ 
+  <define>
+ 
+    <!-- ==================  ECAL  ================== -->
+    <constant name="Ecal_rmin"    value="220.0*cm"/>
+    <constant name="Ecal_depth"   value="40.5*cm"/>
+    <constant name="Ecal_rmax"    value="Ecal_rmin + Ecal_depth"/>
+    <constant name="Ecal_dz"      value="250.0*cm"/>
+    <constant name="Ecal_nphi"    value="81"/>
+    <constant name="Ecal_nz"      value="30"/>
+    <constant name="Ecal_gap"     value="0.0*mm"/>
+    <constant name="Ecal_nlayers" value="2"/>
+ 
+    <!-- ==================  HCAL  ================== -->
+    <constant name="HcalTubeOuterRadius"  value="0.75*mm"/>
+    <constant name="HcalCladOuterRadius"  value="0.5*mm"/>
+    <constant name="HcalCoreOuterRadius"  value="0.485*mm"/>
+    <constant name="HcalTubeTolerance"    value="50*um"/>
+ 
+    <constant name="HcalCoilThickness"    value="50.0*cm"/>   <!-- PLACEHOLDER -->
+    <constant name="HcalInnerRadius"      value="Ecal_rmax + HcalCoilThickness"/>
+    <constant name="HcalDepth"            value="184.0*cm"/>
+    <constant name="HcalOuterRadius"      value="HcalInnerRadius + HcalDepth"/>
+    <constant name="HcalInnerHalfLength"  value="HcalInnerRadius"/>
+ 
+    <constant name="HcalTowerThetaCoverage" value="1.0*deg"/>
+    <constant name="HcalTowerPhiCoverage"   value="5.0*deg"/>
+ 
+    <constant name="HcalSupportSideThickness"  value="0.0*mm"/>
+    <constant name="HcalSupportFrontThickness" value="0.0*mm"/>
+    <constant name="HcalSupportBackThickness"  value="0.0*cm"/>
+ 
+    <!-- Quadrant by default. Set to 360*deg for the full barrel, but be
+         ready to wait hours. For a quick look, 10*deg and 3 towers. -->
+    <constant name="HcalStartCaloPhi"      value="0*deg"/>
+    <constant name="HcalEndCaloPhi"        value="90*deg"/>
+    <constant name="HcalTowerNumberStart"  value="1"/>
+    <constant name="HcalTowerNumberEnd"    value="45"/>
+    <constant name="HcalIncludeBwdRegion"  value="1"/>
+ 
+    <constant name="DetID_HcalBarrelTubes" value="3"/>
+ 
+    <constant name="tracker_region_rmax" value="Ecal_rmin"/>
+    <constant name="tracker_region_zmax" value="Ecal_dz"/>
+  </define>
+ 
+  <display>
+    <vis name="EcalVis" r="0.20" g="0.55" b="0.75" alpha="0.50"
+         showDaughters="true" visible="true"/>
+ 
+    <!-- Tube components stay invisible: drawing tens of millions of
+         capillaries would render nothing useful and hang the viewer.
+         The trap and stave envelopes are what you want to see. -->
+    <vis name="HcalVis"          alpha="0.1" r="0.1"  g="0.5"  b="0.5"  showDaughters="true"  visible="false"/>
+    <vis name="HcalCapillaryVis" alpha="1.0" r="0.55" g="0.55" b="0.58" showDaughters="false" visible="false"/>
+    <vis name="HcalScinCladVis"  alpha="1.0" r="0.80" g="0.19" b="0.08" showDaughters="false" visible="false"/>
+    <vis name="HcalScinCoreVis"  alpha="1.0" r="1.00" g="0.39" b="0.28" showDaughters="false" visible="false"/>
+    <vis name="HcalCherCladVis"  alpha="1.0" r="0.19" g="0.48" b="0.73" showDaughters="false" visible="false"/>
+    <vis name="HcalCherCoreVis"  alpha="1.0" r="0.39" g="0.58" b="0.93" showDaughters="false" visible="false"/>
+    <vis name="HcalAirVis"       alpha="0.1" r="1.0"  g="0.0"  b="0.0"  showDaughters="true"  visible="false"/>
+    <vis name="HcalTrapVis"      alpha="1.0" r="0.75" g="0.45" b="0.30" showDaughters="false" visible="true"/>
+    <vis name="HcalStaveVis"     alpha="0.1" r="0.2"  g="0.2"  b="0.2"  showDaughters="true"  visible="true"/>
+    <vis name="HcalAssemblyVis"  alpha="0.0" r="0.33" g="0.33" b="0.33" showDaughters="true"  visible="true"/>
+  </display>
+ 
+  <detectors>
+ 
+    <detector id="1" name="EcalBarrel" type="GrainitaBarrelModular"
+              material="GrainitaBarrelMix"
+              readout="EcalBarrelHits"
+              vis="EcalVis">
+      <dimensions rmin="Ecal_rmin" rmax="Ecal_rmax" dz="Ecal_dz"/>
+      <modules nphi="Ecal_nphi" nz="Ecal_nz" gap="Ecal_gap"/>
+      <layers number="Ecal_nlayers"/>
+    </detector>
+ 
+    <detector name="HcalBarrelTubes"
+              type="DRBarrelTubes"
+              id="DetID_HcalBarrelTubes"
+              readout="HcalBarrelTubeRO"
+              vis="HcalVis">
+      <type_flags type="DetType_CALORIMETER + DetType_HADRONIC + DetType_BARREL"/>
+      <dimensions
+          inner_radius="HcalInnerRadius"
+          outer_radius="HcalOuterRadius"
+          z_length="HcalInnerHalfLength"
+          deltatheta="HcalTowerThetaCoverage"
+          deltaphi="HcalTowerPhiCoverage"
+          start_calo_phi="HcalStartCaloPhi"
+          end_calo_phi="HcalEndCaloPhi"
+          number_tower_start="HcalTowerNumberStart"
+          number_tower_end="HcalTowerNumberEnd"
+          include_bwd_region="HcalIncludeBwdRegion"/>
+      <trap>
+        <support material="HcalAbsorber" width="HcalSupportSideThickness"
+                 depth="HcalSupportFrontThickness" z2="HcalSupportBackThickness"
+                 vis="HcalTrapVis"/>
+        <air material="Air" vis="HcalAirVis"/>
+      </trap>
+      <tube>
+        <capillary material="HcalAbsorber"            outer_r="HcalTubeOuterRadius" sensitive="false" vis="HcalCapillaryVis" threshold="HcalTubeTolerance"/>
+        <scin_clad material="DRBTPMMA_Scin"           outer_r="HcalCladOuterRadius" sensitive="false" vis="HcalScinCladVis"/>
+        <scin_core material="DRBTDR_Polystyrene"      outer_r="HcalCoreOuterRadius" sensitive="false" vis="HcalScinCoreVis"/>
+        <cher_clad material="DRBTFluorinated_Polymer" outer_r="HcalCladOuterRadius" sensitive="false" vis="HcalCherCladVis"/>
+        <cher_core material="DRBTPMMA"                outer_r="HcalCoreOuterRadius" sensitive="false" vis="HcalCherCoreVis"/>
+      </tube>
+    </detector>
+ 
+  </detectors>
+ 
+  <readouts>
+    <readout name="EcalBarrelHits">
+      <segmentation type="CartesianGridXY" grid_size_x="7.0*mm" grid_size_y="7.0*mm"/>
+      <id>system:5,module:7,row:5,layer:2,x:-6,y:-6</id>
+    </readout>
+ 
+    <!-- NO SPACES BETWEEN ID DESCRIPTORS -->
+    <readout name="HcalBarrelTubeRO">
+      <id>system:5,stave:10,tower:-8,air:6,col:-16,row:16,clad:1,core:1,cherenkov:1</id>
+      <segmentation type="CartesianGridXY" grid_size_x="1*mm" grid_size_y="1*mm"/>
+    </readout>
+  </readouts>
+ 
+</lccdd>
+ 
+

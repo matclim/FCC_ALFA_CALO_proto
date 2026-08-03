@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+ 
+  <info name="HcalBarrelTubes"
+        title="ALFA dual-readout capillary-tube HCAL barrel"
+        author="ALFA PoC"
+        url="none"
+        status="development"
+        version="0.1">
+    <comment>
+      Adapted from k4geo IDEA_o2_v01 DRBarrelTubes_o1_v01 (Andreas Loeschcke
+      Centeno). Uses the DRBarrelTubes constructor unchanged: everything here
+      is parameters. Differences from IDEA are listed in the constants below.
+ 
+      REQUIRES k4geo. The DRBarrelTubes plugin, DRTubesSDAction and the
+      optical material properties all come from there, so this file must be
+      loaded with k4geo on LD_LIBRARY_PATH and the IDEA optical property
+      matrices available (see the note on materials).
+    </comment>
+  </info>
+ 
+  <!-- Defined FIRST, before <includes>. DD4hep processes the file in
+       document order and creates the world volume while handling the
+       includes, so world_x/y/z must already exist by then. Putting them in
+       the main <define> block below fails with "unknown variable world_z". -->
+  <define>
+    <constant name="world_side" value="12.0*m"/>
+    <constant name="world_x"    value="world_side"/>
+    <constant name="world_y"    value="world_side"/>
+    <constant name="world_z"    value="world_side"/>
+  </define>
+ 
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
+    <!-- Fibre materials with their optical properties and Birks constant,
+         lifted from IDEA by extract_drtubes_materials.py. -->
+    <gdmlFile ref="drtubes_materials.xml"/>
+    <!-- HCAL absorber. Kept separate from the ECAL materials file. -->
+    <gdmlFile ref="hcal_materials.xml"/>
+  </includes>
+ 
+  <define>
+ 
+    <!-- ================================================================
+         TUBE GEOMETRY
+         ================================================================
+         ALFA deck slide 98 specifies a 1.5 mm pitch. The constructor treats
+         the capillary outer radius as the hexagon INRADIUS, so pitch =
+         2 * outer_r, giving outer_r = 0.75 mm.
+ 
+         Fibres stay at the standard 1 mm diameter (0.5 mm clad radius), so
+         the tube WALL drops from IDEA's 0.5 mm to 0.25 mm.
+ 
+         Consequence, and it is not small:
+           absorber fraction  68.0% -> 50.4%
+           effective density  5.61  -> 4.42 g/cm3
+           lambda_I           22.9  -> 28.2 cm
+         i.e. the 1.5 mm tube buys transverse granularity at the cost of a
+         calorimeter ~30 cm deeper for the same number of lambda. Set
+         HcalTubeOuterRadius back to 1.0*mm to recover IDEA's geometry.
+    -->
+    <constant name="HcalTubeOuterRadius"  value="0.75*mm"/>   <!-- IDEA: 1.0*mm -->
+    <constant name="HcalCladOuterRadius"  value="0.5*mm"/>    <!-- standard 1 mm fibre -->
+    <constant name="HcalCoreOuterRadius"  value="0.485*mm"/>
+    <constant name="HcalTubeTolerance"    value="50*um"/>
+ 
+    <!-- ================================================================
+         ENVELOPE
+         ================================================================
+         inner radius = ECAL outer (2.604 m) + coil.
+ 
+         THE COIL THICKNESS IS A PLACEHOLDER. 50 cm is a guess with nothing
+         behind it, and it propagates straight into the tube count and the
+         overall detector size. Replace it as soon as there is a real number.
+ 
+         Depth: 6.53 lambda at 28.18 cm, which with the ECAL's 1.57 lambda
+         in front gives 8.1 lambda total. Compare IDEA, which needs 7.8
+         standalone because it has no ECAL ahead of it.
+ 
+         Depth is meant to be scanned. Change HcalDepth alone; the outer
+         radius follows.
+    -->
+    <constant name="HcalCoilThickness"    value="50.0*cm"/>   <!-- PLACEHOLDER -->
+    <constant name="HcalInnerRadius"      value="260.4*cm + HcalCoilThickness"/>
+    <constant name="HcalDepth"            value="184.0*cm"/>  <!-- 6.53 lambda -->
+    <constant name="HcalOuterRadius"      value="HcalInnerRadius + HcalDepth"/>
+ 
+    <!-- z_length = inner radius puts the barrel edge at exactly 45 deg,
+         which is what IDEA does and what makes the endcap symmetric. -->
+    <constant name="HcalInnerHalfLength"  value="HcalInnerRadius"/>
+ 
+    <!-- ================================================================
+         TOWERS
+         ================================================================
+         1 deg theta x 5 deg phi, as IDEA. 45 towers covers 45 to 90 deg;
+         72 staves closes the azimuth.
+    -->
+    <constant name="HcalTowerThetaCoverage" value="1.0*deg"/>
+    <constant name="HcalTowerPhiCoverage"   value="5.0*deg"/>
+ 
+    <!-- Support structure: zero, as in IDEA's own file. Real values belong
+         here once the mechanical design exists. -->
+    <constant name="HcalSupportSideThickness"  value="0.0*mm"/>
+    <constant name="HcalSupportFrontThickness" value="0.0*mm"/>
+    <constant name="HcalSupportBackThickness"  value="0.0*cm"/>
+ 
+    <!-- ================================================================
+         PARTIAL BUILD - use this while debugging
+         ================================================================
+         62 million tubes takes a long time to construct and a lot of
+         memory. Build two staves and three towers first:
+ 
+             HcalEndCaloPhi     = 10*deg
+             HcalTowerNumberEnd = 3
+ 
+         Only go to the full barrel once the geometry checks pass.
+    -->
+    <constant name="HcalStartCaloPhi"      value="0*deg"/>
+    <constant name="HcalEndCaloPhi"        value="90*deg"/>
+    <constant name="HcalTowerNumberStart"  value="1"/>
+    <constant name="HcalTowerNumberEnd"    value="45"/>
+    <constant name="HcalIncludeBwdRegion"  value="1"/>
+ 
+    <constant name="DetID_HcalBarrelTubes" value="3"/>
+ 
+    <!-- Required by the DDSim UserParticleHandler. -->
+    <constant name="tracker_region_rmax" value="HcalInnerRadius"/>
+    <constant name="tracker_region_zmax" value="HcalInnerHalfLength"/>
+  </define>
+ 
+  <display>
+    <vis name="HcalVis"          alpha="0.1" r="0.1" g="0.5" b="0.5" showDaughters="true"  visible="false"/>
+    <vis name="HcalCapillaryVis" alpha="1.0" r="0.55" g="0.55" b="0.58" showDaughters="false" visible="false"/>
+    <vis name="HcalScinCladVis"  alpha="1.0" r="0.80" g="0.19" b="0.08" showDaughters="false" visible="false"/>
+    <vis name="HcalScinCoreVis"  alpha="1.0" r="1.00" g="0.39" b="0.28" showDaughters="false" visible="false"/>
+    <vis name="HcalCherCladVis"  alpha="1.0" r="0.19" g="0.48" b="0.73" showDaughters="false" visible="false"/>
+    <vis name="HcalCherCoreVis"  alpha="1.0" r="0.39" g="0.58" b="0.93" showDaughters="false" visible="false"/>
+    <vis name="HcalAirVis"       alpha="0.1" r="1.0" g="0.0" b="0.0" showDaughters="true"  visible="false"/>
+    <vis name="HcalTrapVis"      alpha="1.0" r="0.55" g="0.55" b="0.58" showDaughters="false" visible="true"/>
+    <vis name="HcalStaveVis"     alpha="0.1" r="0.2" g="0.2" b="0.2" showDaughters="true"  visible="true"/>
+    <vis name="HcalAssemblyVis"  alpha="0.0" r="0.33" g="0.33" b="0.33" showDaughters="true" visible="true"/>
+  </display>
+ 
+  <detectors>
+    <detector name="HcalBarrelTubes"
+              type="DRBarrelTubes"
+              id="DetID_HcalBarrelTubes"
+              readout="HcalBarrelTubeRO"
+              vis="HcalVis">
+ 
+      <type_flags type="DetType_CALORIMETER + DetType_HADRONIC + DetType_BARREL"/>
+ 
+      <dimensions
+          inner_radius="HcalInnerRadius"
+          outer_radius="HcalOuterRadius"
+          z_length="HcalInnerHalfLength"
+          deltatheta="HcalTowerThetaCoverage"
+          deltaphi="HcalTowerPhiCoverage"
+ 
+          start_calo_phi="HcalStartCaloPhi"
+          end_calo_phi="HcalEndCaloPhi"
+          number_tower_start="HcalTowerNumberStart"
+          number_tower_end="HcalTowerNumberEnd"
+          include_bwd_region="HcalIncludeBwdRegion"/>
+ 
+      <trap>
+        <support material="HcalAbsorber" width="HcalSupportSideThickness"
+                 depth="HcalSupportFrontThickness" z2="HcalSupportBackThickness"
+                 vis="HcalTrapVis"/>
+        <air material="Air" vis="HcalAirVis"/>
+      </trap>
+ 
+      <!-- IRON, not IDEA's brass. This is the only material change the
+           ALFA concept requires, and it is a one-word edit because the
+           constructor reads every material from XML. -->
+      <tube>
+        <capillary material="HcalAbsorber"            outer_r="HcalTubeOuterRadius" sensitive="false" vis="HcalCapillaryVis" threshold="HcalTubeTolerance"/>
+        <scin_clad material="DRBTPMMA_Scin"           outer_r="HcalCladOuterRadius" sensitive="false" vis="HcalScinCladVis"/>
+        <scin_core material="DRBTDR_Polystyrene"      outer_r="HcalCoreOuterRadius" sensitive="false" vis="HcalScinCoreVis"/>
+        <cher_clad material="DRBTFluorinated_Polymer" outer_r="HcalCladOuterRadius" sensitive="false" vis="HcalCherCladVis"/>
+        <cher_core material="DRBTPMMA"                outer_r="HcalCoreOuterRadius" sensitive="false" vis="HcalCherCoreVis"/>
+      </tube>
+ 
+    </detector>
+  </detectors>
+ 
+  <readouts>
+    <!-- NO SPACES BETWEEN ID DESCRIPTORS. Copied verbatim from IDEA: it
+         uses all 64 bits, and clad/core/cherenkov are the three flag bits
+         that make dual readout work. Do not add fields. -->
+    <readout name="HcalBarrelTubeRO">
+      <id>system:5,stave:10,tower:-8,air:6,col:-16,row:16,clad:1,core:1,cherenkov:1</id>
+      <segmentation type="CartesianGridXY" grid_size_x="1*mm" grid_size_y="1*mm"/>
+    </readout>
+  </readouts>
+ 
+</lccdd>
+

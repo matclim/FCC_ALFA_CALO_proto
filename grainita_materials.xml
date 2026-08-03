@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<materials>
+
+  <!--
+    ================================================================
+    GRAiNITA materials for DD4hep / Key4hep
+    ================================================================
+
+    GRAiNITA = ~1 mm ZnWO4 scintillator grains immersed in a heavy
+    transparent liquid, 80% / 20% by MASS (ALFA deck, slide 90).
+
+    Derived quantities (see README for the calculation):
+
+      grain volume packing fraction   f     = 0.587
+      effective density               rho   = 5.78 g/cm3
+      effective radiation length      X0    = 1.60 cm
+      effective Moliere radius        Rm    = 2.56 cm
+      effective Z                     Zeff  = 51
+
+    Cross-check: 25 X0 = 40.0 cm, which is exactly the depth of the
+    17 x 17 x 40 cm3 demonstrator module quoted as "25 X0 in depth"
+    on slide 94. This is the main validation that the mixture model
+    is right.
+
+    ================ OPEN INPUT, PLEASE VERIFY ================
+    The deck says "sodium tungstate water solution". A plain Na2WO4
+    solution saturates around 1.5 g/cm3, which is far too light to
+    give the 80/20 mass split at a sensible grain packing fraction.
+    Reaching ~2.8-3.1 g/cm3 requires sodium POLYtungstate,
+    Na6(H2W12O40), the standard dense-media-separation heavy liquid.
+    That is what is assumed below.
+
+    Ask the IJCLab/LPClermont GRAiNITA people for the actual liquid
+    and its density before using this for anything but a PoC. The
+    sensitivity is mild but not negligible:
+
+      rho_liq = 2.80  ->  f=0.587, rho_eff=5.78, X0=1.60 cm, Rm=2.56 cm
+      rho_liq = 3.00  ->  f=0.604, rho_eff=5.94, X0=1.55 cm, Rm=2.50 cm
+      rho_liq = 3.10  ->  f=0.612, rho_eff=6.02, X0=1.53 cm, Rm=2.47 cm
+
+    The X0 in g/cm2 is almost identical for the grains (9.17) and the
+    liquid (9.6), because both are tungstate-dominated. So the
+    effective X0 in cm is driven almost entirely by rho_eff, i.e. by
+    the packing fraction. That is the number worth pinning down.
+    ================================================================
+  -->
+
+  <!-- ========== constituents ========== -->
+
+  <material name="ZnWO4">
+    <D type="density" unit="g/cm3" value="7.87"/>
+    <composite n="1" ref="Zn"/>
+    <composite n="1" ref="W"/>
+    <composite n="4" ref="O"/>
+  </material>
+
+  <!-- Sodium polytungstate, Na6(H2W12O40), as the anhydrous solute -->
+  <material name="SodiumPolytungstate">
+    <D type="density" unit="g/cm3" value="4.00"/>
+    <composite n="6"  ref="Na"/>
+    <composite n="2"  ref="H"/>
+    <composite n="12" ref="W"/>
+    <composite n="40" ref="O"/>
+  </material>
+
+  <!-- Water, defined locally: DD4hep's DDDetectors materials.xml does not
+       provide a "Water" material, and relying on it fails at load time.
+       Named GrainitaWater to avoid clashing with any downstream definition. -->
+  <material name="GrainitaWater">
+    <D type="density" unit="g/cm3" value="1.00"/>
+    <composite n="2" ref="H"/>
+    <composite n="1" ref="O"/>
+  </material>
+
+  <!-- Heavy liquid: 85.7% SPT / 14.3% water by mass -> 2.80 g/cm3 -->
+  <material name="GrainitaHeavyLiquid">
+    <D type="density" unit="g/cm3" value="2.80"/>
+    <fraction n="0.857" ref="SodiumPolytungstate"/>
+    <fraction n="0.143" ref="GrainitaWater"/>
+  </material>
+
+  <!-- ========== the effective homogeneous medium ========== -->
+  <!--
+    This is what the full-detector simulation sees. It reproduces the
+    shower development of the grain/liquid mixture correctly (X0, Rm,
+    dE/dx, Zeff) but knows nothing about optical transport. Light
+    collection is applied later, at digitisation.
+  -->
+  <material name="Grainita">
+    <D type="density" unit="g/cm3" value="5.778"/>
+    <fraction n="0.80" ref="ZnWO4"/>
+    <fraction n="0.20" ref="GrainitaHeavyLiquid"/>
+  </material>
+
+  <!-- ========== WLS fibre ========== -->
+  <!--
+    Treated as passive in the effective model: it displaces active
+    medium and is a source of non-uniformity, but its energy deposit
+    is not collected. Polystyrene core; cladding ignored at PoC level.
+  -->
+  <material name="WLSFibreCore">
+    <D type="density" unit="g/cm3" value="1.05"/>
+    <composite n="8" ref="C"/>
+    <composite n="8" ref="H"/>
+  </material>
+  <!-- ==========================================================
+       Barrel medium: Grainita with the WLS fibre grid folded in
+       ==========================================================
+
+       In the test module the 625 fibres are placed explicitly. In a
+       barrel there would be several million, which would make Geant4
+       navigation miserable for no physics gain. So instead the fibres
+       are homogenised into the medium:
+
+         fibre volume fraction = pi*r^2/pitch^2 = pi*0.5^2/7^2 = 1.603%
+         effective density     = 5.7022 g/cm3
+         mass fractions        = 0.99705 Grainita / 0.00295 polystyrene
+
+       This slightly dilutes the medium, so X0 grows from 1.595 cm to
+       about 1.616 cm and 25 X0 becomes 40.4 cm rather than 39.9 cm.
+
+       What this DOES capture: the average dead material of the fibre
+       grid. What it does NOT capture: the position dependence of light
+       collection between and along fibres, which is the source of the
+       constant term. That belongs in the digitisation parametrisation,
+       not the geometry.
+  -->
+  <material name="GrainitaBarrelMix">
+    <D type="density" unit="g/cm3" value="5.7022"/>
+    <fraction n="0.99705" ref="Grainita"/>
+    <fraction n="0.00295" ref="WLSFibreCore"/>
+  </material>
+
+</materials>

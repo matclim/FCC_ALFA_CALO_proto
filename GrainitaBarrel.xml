@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lccdd xmlns:compact="http://www.lcsim.org/schemas/compact/1.0"
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       xs:noNamespaceSchemaLocation="http://www.lcsim.org/schemas/compact/1.0/compact.xsd">
+ 
+  <info name="GrainitaBarrel"
+        title="GRAiNITA ECAL barrel for ALFA, proof of concept"
+        author="ALFA PoC"
+        url="none"
+        status="development"
+        version="0.1">
+    <comment>
+      Cylindrical GRAiNITA ECAL barrel. Inner radius set by the ARC pressure
+      vessel outer diameter of 4.4 m (ALFA deck slide 4). Depth 25 X0.
+    </comment>
+  </info>
+ 
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/materials.xml"/>
+    <gdmlFile ref="grainita_materials.xml"/>
+  </includes>
+ 
+  <define>
+    <!-- ==========  ECAL barrel envelope  ==========
+         rmin  : ARC pressure vessel OD is 4.4 m, so the ECAL starts at 2.2 m
+         depth : 25 X0 at X0 = 1.616 cm for the fibre-diluted medium
+         dz    : HALF length. NOT from the deck - assumed. With 2.5 m the
+                 barrel reaches theta = 41 deg, i.e. |cos(theta)| < 0.75.
+                 This is the number most worth replacing with a real one.
+    -->
+    <constant name="GrainitaBarrel_rmin"  value="220.0*cm"/>
+    <constant name="GrainitaBarrel_depth" value="40.4*cm"/>
+    <constant name="GrainitaBarrel_rmax"  value="GrainitaBarrel_rmin + GrainitaBarrel_depth"/>
+    <constant name="GrainitaBarrel_dz"    value="250.0*cm"/>
+ 
+    <!-- Longitudinal segmentation: slide 96, "at least two sections".
+         Set to 1, 2, 4 to scan. -->
+    <constant name="GrainitaBarrel_nlayers" value="2"/>
+ 
+    <!-- ==========  transverse segmentation  ==========
+         ~7 mm cells at the inner face (r = 2.2 m) need
+             phi   : 2*pi*2200/7  = 1975 bins
+             theta : pi/(7/2200)  =  987 bins over the full 0..pi range
+         Coarsen these while debugging: they cost nothing in volumes but
+         they do set the hit multiplicity.
+    -->
+    <constant name="GrainitaBarrel_phibins"   value="1975"/>
+    <constant name="GrainitaBarrel_thetabins" value="987"/>
+ 
+    <constant name="world_side" value="10.0*m"/>
+    <constant name="world_x"    value="world_side"/>
+    <constant name="world_y"    value="world_side"/>
+    <constant name="world_z"    value="world_side"/>
+ 
+    <!-- required by the DDSim UserParticleHandler -->
+    <constant name="tracker_region_rmax" value="GrainitaBarrel_rmin"/>
+    <constant name="tracker_region_zmax" value="GrainitaBarrel_dz"/>
+  </define>
+ 
+  <display>
+    <vis name="GrainitaBarrelVis" r="0.20" g="0.55" b="0.75" alpha="0.40"
+         showDaughters="true" visible="true"/>
+  </display>
+ 
+  <detectors>
+    <detector id="2" name="GrainitaEcalBarrel" type="GrainitaBarrel"
+              material="GrainitaBarrelMix"
+              readout="GrainitaBarrelHits"
+              vis="GrainitaBarrelVis">
+      <dimensions rmin="GrainitaBarrel_rmin"
+                  rmax="GrainitaBarrel_rmax"
+                  dz="GrainitaBarrel_dz"/>
+      <layers number="GrainitaBarrel_nlayers"/>
+    </detector>
+  </detectors>
+ 
+  <readouts>
+    <readout name="GrainitaBarrelHits">
+      <!--
+        UNVERIFIED: ProjectiveCylinder exists in DD4hep, but I could not
+        confirm the XML attribute spelling. If loading fails with an
+        unknown-parameter complaint, run list_segmentation_params.py to
+        print the real names and fix the two attributes below.
+        Plausible alternatives: thetaBins/phiBins, grid_size_theta/phi.
+      -->
+      <segmentation type="ProjectiveCylinder"
+                    phi_bins="GrainitaBarrel_phibins"
+                    theta_bins="GrainitaBarrel_thetabins"/>
+      <id>system:5,layer:4,theta:11,phi:12</id>
+    </readout>
+  </readouts>
+ 
+</lccdd>
+

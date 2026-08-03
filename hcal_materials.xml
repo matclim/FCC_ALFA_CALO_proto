@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<materials>
+ 
+  <!--
+    HCAL materials, kept separate from grainita_materials.xml so the ECAL
+    description stays self-contained and untouched by HCAL work.
+ 
+    The fibre materials themselves (DRBTDR_Polystyrene, DRBTPMMA_Scin,
+    DRBTPMMA, DRBTFluorinated_Polymer) are NOT defined here. They carry
+    optical properties, scintillation spectra and the Birks constant, and
+    are extracted verbatim from k4geo by extract_drtubes_materials.py into
+    drtubes_materials.xml. Do not duplicate them.
+  -->
+ 
+  <!--
+    Capillary-tube absorber.
+ 
+    IDEA uses brass. The ALFA deck specifies iron, which also serves as the
+    magnet return yoke and keeps the overall detector dimensions compact.
+    Changing absorber means changing this one material: the DRBarrelTubes
+    constructor reads every material from XML.
+  -->
+  <material name="HcalAbsorber">
+    <D type="density" unit="g/cm3" value="7.874"/>
+    <composite n="1" ref="Fe"/>
+  </material>
+ 
+</materials>
+ 
+
