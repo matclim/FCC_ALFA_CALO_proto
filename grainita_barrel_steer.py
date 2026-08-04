@@ -132,6 +132,31 @@ SIM.action.calorimeterSDTypes = ["calorimeter"]
 # matching, so naming a detector that is not present is harmless.
 SIM.action.mapActions["HcalBarrelTubes"] = "DRTubesSDAction"
  
+# ---------------------------------------------------------------------------
+# THE LINE THAT MAKES CHERENKOV WORK
+# ---------------------------------------------------------------------------
+# DDSim applies filter.calo = "edep0" by default: the sensitive action only
+# runs for steps with a non-zero energy deposit.
+#
+# An optical photon DETECTED at a SiPM deposits no energy -- detection is a
+# boundary process, not an energy loss. So every Cherenkov step is discarded
+# before DRTubesSDAction ever sees it, and DRBTCher comes out EMPTY while
+# DRBTScin fills normally (scintillation is driven by charged particles that
+# do deposit energy).
+#
+# The failure is total, not statistical: 6309 p.e. of scintillation against
+# exactly 0 Cherenkov in the same 20 GeV event. And it is silent -- the run
+# completes, the collection exists, and any dual-readout correction built on
+# it becomes a no-op that quietly reports scintillation-only performance.
+#
+# IDEA documents this exact trap in SteeringFile_IDEA_o2_v01.py, for SCEPCal:
+#   "Do not add filter to crystal calorimeter (e.g. edep1kev) otherwise
+#    optical photons will not be processed by its SDAction and corresponding
+#    collections are empty"
+# They clear it for SCEPCal but NOT for DRBarrelTubes, which suggests their
+# default configuration has the same problem.
+SIM.filter.mapDetFilter["HcalBarrelTubes"] = ""
+ 
 # THE LINE THAT ACTUALLY CREATES THE HITS.
 # Tube components are sensitive="false" in XML; sensitivity is assigned by
 # matching volume names. DRTubesconstructor names the fibre volumes
